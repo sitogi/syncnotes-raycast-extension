@@ -5,10 +5,11 @@ import useSWR from "swr";
 import { z } from "zod";
 
 const cardScheme = z.object({
-  objectID: z.string(),
   boardId: z.string(),
-  title: z.string(),
+  color: z.string(),
   mdStr: z.string(),
+  objectID: z.string(),
+  title: z.string(),
 });
 
 type Card = z.infer<typeof cardScheme>;
@@ -63,7 +64,7 @@ export default function Command() {
           return (
             <List.Item
               key={card.objectID}
-              icon={Icon.Document}
+              icon={{ source: Icon.Document, tintColor: card.color }}
               title={card.title}
               detail={<List.Item.Detail markdown={card.mdStr} />}
               actions={
