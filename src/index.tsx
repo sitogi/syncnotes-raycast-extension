@@ -1,6 +1,7 @@
-import { getPreferenceValues, List } from '@raycast/api';
-import { useCallback, useEffect, useState } from 'react';
+import { getPreferenceValues, Detail, List } from '@raycast/api';
+import { useState } from 'react';
 import fetch from 'node-fetch';
+import useSWR from 'swr';
 
 type Preferences = {
   appId: string;
@@ -16,52 +17,45 @@ type Card = {
   url: string,
 }
 
+
 const preferences = getPreferenceValues<Preferences>();
 
+const fetcher = async (url: string, searchText: string): Promise<Card[] | undefined> => {
+  if (searchText.length < 3) {
+    return undefined;
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      "X-Algolia-API-Key": preferences.apiKey,
+      "X-Algolia-Application-Id": preferences.appId,
+    },
+  });
+
+  const json = await res.json() as any;
+
+  return json.hits.map((h: any) => {
+    const cardLink = `https://${preferences.host}/board/${h.boardId}#${h.objectID}`;
+    return ({
+      id: h.objectID,
+      title: h.title,
+      mdStr: h.mdStr,
+      url: cardLink,
+    });
+  });
+}
+
 export default function Command() {
-  const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [items, setItems] = useState<Card[]>([]);
+  const { data, error } = useSWR( `https://${preferences.appId}-dsn.algolia.net/1/indexes/${preferences.target}?query=${searchText}`, url => fetcher(url, searchText));
 
-  const search = useCallback(async () => {
-    if (searchText.length < 3) {
-      return;
-    }
-
-    setLoading(true);
-    const url = `https://${preferences.appId}-dsn.algolia.net/1/indexes/${preferences.target}?query=${searchText}`;
-
-    const res = await fetch(url, {
-      headers: {
-        "X-Algolia-API-Key": preferences.apiKey,
-        "X-Algolia-Application-Id": preferences.appId,
-      },
-    });
-
-   const json = await res.json() as any;
-
-    const items = json.hits.map((h: any) => {
-      const cardLink = `https://${preferences.host}/board/${h.boardId}#${h.objectID}`;
-      return ({
-        id: h.objectID,
-        title: h.title,
-        mdStr: h.mdStr,
-        url: cardLink,
-      });
-    });
-
-    setItems(items);
-    setLoading(false);
-  }, [searchText]);
-
-  useEffect(() => {
-    void search();
-  }, [searchText]);
-
+  if (error !== undefined) {
+    return <Detail markdown="Sorry. An error occurred." />;
+  }
 
   return (
-    <List isShowingDetail onSearchTextChange={setSearchText} isLoading={loading}>
-      {items.map((item) => (
+    <List isShowingDetail onSearchTextChange={setSearchText} isLoading={data === undefined}>
+      {data !== undefined && data.map((item) => (
         <List.Item
           key={item.id}
           icon="list-icon.png"
