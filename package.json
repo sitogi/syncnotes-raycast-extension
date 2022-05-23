@@ -3,7 +3,7 @@
   "name": "syncnotes-raycast-extension",
   "title": "syncnotes-raycast-extension",
   "description": "full-text search for syncnotes",
-  "icon": "command-icon.png",
+  "icon": "syncnotes.png",
   "author": "sitogi",
   "categories": [
     "Applications"
@@ -12,9 +12,10 @@
   "commands": [
     {
       "name": "index",
-      "title": "ss",
-      "description": "Template for showing a static list and a detail view",
-      "mode": "view"
+      "title": "Search Syncnotes",
+      "description": "Search for notes in syncnotes",
+      "mode": "view",
+      "keywords": ["s", "sn", "sync"]
     }
   ],
   "dependencies": {
