@@ -7,9 +7,11 @@ import { z } from "zod";
 const cardScheme = z.object({
   boardId: z.string(),
   color: z.string(),
+  createdAt: z.number(),
   mdStr: z.string(),
   objectID: z.string(),
   title: z.string(),
+  updatedAt: z.number(),
 });
 
 type Card = z.infer<typeof cardScheme>;
@@ -58,17 +60,26 @@ export default function Command() {
   }
 
   return (
-    <List isShowingDetail onSearchTextChange={setSearchText} isLoading={data === undefined}>
+    <List
+      searchBarPlaceholder="you should enter over 3 letters."
+      isShowingDetail
+      onSearchTextChange={setSearchText}
+      isLoading={data === undefined}
+    >
       {data !== undefined &&
         data.map((card) => {
           return (
             <List.Item
               key={card.objectID}
-              icon={{ source: Icon.Document, tintColor: card.color }}
+              icon={{
+                source: Icon.Document,
+                tintColor: card.color,
+              }}
               title={card.title}
               detail={<List.Item.Detail markdown={card.mdStr} />}
               actions={
                 <ActionPanel title="#1 in raycast/extensions">
+                  <Action.Push title="Show Detail" target={<CardDetail card={card} />} />
                   <Action.OpenInBrowser url={`https://${preferences.host}/board/${card.boardId}#${card.objectID}`} />
                 </ActionPanel>
               }
@@ -76,5 +87,42 @@ export default function Command() {
           );
         })}
     </List>
+  );
+}
+
+const formatDate = (date: Date, format: string): string => {
+  return format
+    .replace(/yyyy/g, `${date.getFullYear()}`)
+    .replace(/MM/g, `0${date.getMonth() + 1}`.slice(-2))
+    .replace(/dd/g, `0${date.getDate()}`.slice(-2))
+    .replace(/HH/g, `0${date.getHours()}`.slice(-2))
+    .replace(/mm/g, `0${date.getMinutes()}`.slice(-2))
+    .replace(/ss/g, `0${date.getSeconds()}`.slice(-2))
+    .replace(/SSS/g, `00${date.getMilliseconds()}`.slice(-3));
+};
+
+function CardDetail({ card }: { card: Card }) {
+  return (
+    <Detail
+      markdown={card.mdStr}
+      navigationTitle={card.title}
+      metadata={
+        <Detail.Metadata>
+          <Detail.Metadata.Link
+            title="Board Link"
+            target={`https://${preferences.host}/board/${card.boardId}`}
+            text={`https://${preferences.host}/board/${card.boardId}`}
+          />
+          <Detail.Metadata.Link
+            title="Card Link"
+            target={`https://${preferences.host}/board/${card.boardId}#${card.objectID}`}
+            text={`https://${preferences.host}/board/${card.boardId}#${card.objectID}`}
+          />
+          <Detail.Metadata.Separator />
+          <Detail.Metadata.Label title="Created At" text={formatDate(new Date(card.createdAt), "yyyy-MM-dd HH:mm")} />
+          <Detail.Metadata.Label title="Updated At" text={formatDate(new Date(card.updatedAt), "yyyy-MM-dd HH:mm")} />
+        </Detail.Metadata>
+      }
+    />
   );
 }
