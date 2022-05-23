@@ -1,0 +1,1 @@
+# syncnotes-raycast-extension

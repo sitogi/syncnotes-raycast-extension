@@ -1,0 +1,71 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "syncnotes-raycast-extension",
+  "title": "syncnotes-raycast-extension",
+  "description": "full-text search for syncnotes",
+  "icon": "command-icon.png",
+  "author": "sitogi",
+  "categories": [
+    "Applications"
+  ],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "index",
+      "title": "ss",
+      "description": "Template for showing a static list and a detail view",
+      "mode": "view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.35.1",
+    "node-fetch": "^3.2.4",
+    "swr": "^1.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "~16.10.0",
+    "@types/react": "^17.0.28",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "prettier": "^2.5.1",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "preferences": [
+    {
+      "name": "appId",
+      "type": "textfield",
+      "required": true,
+      "title": "Algoria App ID",
+      "description": "Enter Algoria App ID"
+    },
+    {
+      "name": "apiKey",
+      "type": "password",
+      "required": true,
+      "title": "Algoria API Key",
+      "description": "Enter Algoria API Key"
+    },
+    {
+      "name": "target",
+      "type": "textfield",
+      "required": true,
+      "title": "Target index",
+      "description": "Enter search target index"
+    },
+    {
+      "name": "host",
+      "type": "textfield",
+      "required": true,
+      "title": "Syncnotes hostname",
+      "description": "Enter syncnotes hostname (e.g. syncnotes.app)"
+    }
+  ]
+}
