@@ -2,19 +2,26 @@ import { Action, ActionPanel, Detail, getPreferenceValues, Icon, List } from "@r
 import { useState } from "react";
 import fetch from "node-fetch";
 import useSWR from "swr";
+import { z } from "zod";
+
+const cardScheme = z.object({
+  objectID: z.string(),
+  boardId: z.string(),
+  title: z.string(),
+  mdStr: z.string(),
+});
+
+type Card = z.infer<typeof cardScheme>;
+
+const searchResultScheme = z.object({
+  hits: z.array(cardScheme),
+});
 
 type Preferences = {
   appId: string;
   apiKey: string;
   target: string;
   host: string;
-};
-
-type Card = {
-  id: string;
-  title: string;
-  mdStr: string;
-  url: string;
 };
 
 const preferences = getPreferenceValues<Preferences>();
@@ -31,17 +38,11 @@ const fetcher = async (url: string, searchText: string): Promise<Card[] | undefi
     },
   });
 
-  const json = (await res.json()) as any;
+  const json = (await res.json()) as unknown;
 
-  return json.hits.map((h: any) => {
-    const cardLink = `https://${preferences.host}/board/${h.boardId}#${h.objectID}`;
-    return {
-      id: h.objectID,
-      title: h.title,
-      mdStr: h.mdStr,
-      url: cardLink,
-    };
-  });
+  const result = searchResultScheme.parse(json);
+
+  return result.hits;
 };
 
 export default function Command() {
@@ -52,25 +53,27 @@ export default function Command() {
   );
 
   if (error !== undefined) {
-    return <Detail markdown="Sorry. An error occurred." />;
+    return <Detail markdown={`Sorry. An error occurred. \n>${error.message}`} />;
   }
 
   return (
     <List isShowingDetail onSearchTextChange={setSearchText} isLoading={data === undefined}>
       {data !== undefined &&
-        data.map((item) => (
-          <List.Item
-            key={item.id}
-            icon={Icon.Document}
-            title={item.title}
-            detail={<List.Item.Detail markdown={item.mdStr} />}
-            actions={
-              <ActionPanel title="#1 in raycast/extensions">
-                <Action.OpenInBrowser url={item.url} />
-              </ActionPanel>
-            }
-          />
-        ))}
+        data.map((card) => {
+          return (
+            <List.Item
+              key={card.objectID}
+              icon={Icon.Document}
+              title={card.title}
+              detail={<List.Item.Detail markdown={card.mdStr} />}
+              actions={
+                <ActionPanel title="#1 in raycast/extensions">
+                  <Action.OpenInBrowser url={`https://${preferences.host}/board/${card.boardId}#${card.objectID}`} />
+                </ActionPanel>
+              }
+            />
+          );
+        })}
     </List>
   );
 }
